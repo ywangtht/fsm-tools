@@ -9,9 +9,19 @@ import (
 	"net"
 )
 
+const (
+	eventIDGetQueryStat uint32 = 119
+	eventLen            uint32 = 0
+	processHash         uint32 = 0
+	seqID               uint32 = 0
+)
+
+var (
+	host = flag.String("h", "localhost", "remote server")
+	port = flag.String("p", "7918", "remote server port")
+)
+
 func main() {
-	host := flag.String("h", "localhost", "remote server")
-	port := flag.String("p", "7918", "remote server port")
 	flag.Parse()
 	url := *host + ":" + *port
 	conn, err := net.Dial("tcp", url)
@@ -20,12 +30,14 @@ func main() {
 		return
 	}
 	buff := new(bytes.Buffer)
-	binary.Write(buff, binary.LittleEndian, uint32(119))
-	binary.Write(buff, binary.LittleEndian, uint32(0))
-	binary.Write(buff, binary.LittleEndian, uint32(0))
-	binary.Write(buff, binary.LittleEndian, uint32(0))
+	binary.Write(buff, binary.LittleEndian, eventIDGetQueryStat)
+	binary.Write(buff, binary.LittleEndian, eventLen)
+	binary.Write(buff, binary.LittleEndian, processHash)
+	binary.Write(buff, binary.LittleEndian, seqID)
 	intByteArray := buff.Bytes()
 	conn.Write(intByteArray)
+
+	//receive response
 	p := make([]byte, 4)
 	io.ReadFull(conn, p)
 	statLen := binary.LittleEndian.Uint32(p)
